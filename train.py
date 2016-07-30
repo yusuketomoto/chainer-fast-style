@@ -1,7 +1,7 @@
 import numpy as np
-import os, re
+import os
 import argparse
-from PIL import Image
+from PIL import Image, ImageOps
 
 from chainer import cuda, Variable, optimizers, serializers
 from net import *
@@ -39,6 +39,10 @@ parser.add_argument('--resume', '-r', default=None, type=str,
                     help='resume the optimization from snapshot')
 parser.add_argument('--output', '-o', default=None, type=str,
                     help='output model file path without extension')
+parser.add_argument('--image_size', default=512, type=int,
+                    help='dimensions to scale style image and dataset')
+parser.add_argument('--fullsize', dest='crop', action='store_false',
+                    help='do not crop dataset images, but scale only')
 parser.add_argument('--lambda_tv', default=10e-4, type=float,
                     help='weight of total variation regularization according to the paper to be set between 10e-4 and 10e-6.')
 parser.add_argument('--lambda_feat', default=1e0, type=float)
@@ -46,11 +50,12 @@ parser.add_argument('--lambda_style', default=1e1, type=float)
 parser.add_argument('--epoch', '-e', default=2, type=int)
 parser.add_argument('--lr', '-l', default=1e-3, type=float)
 parser.add_argument('--checkpoint', '-c', default=0, type=int)
+parser.set_defaults(crop=True)
 args = parser.parse_args()
 
 batchsize = args.batchsize
 
-m_epoch = 0
+size = args.image_size
 n_epoch = args.epoch
 lambda_tv = args.lambda_tv
 lambda_f = args.lambda_feat
@@ -87,7 +92,7 @@ if args.resume:
     print 'load optimizer state from', args.resume
     serializers.load_npz(args.resume, O)
 
-style = vgg.preprocess(np.asarray(Image.open(args.style_image).convert('RGB').resize((256,256)), dtype=np.float32))
+style = vgg.preprocess(np.asarray(Image.open(args.style_image).convert('RGB').resize((size,size), 3), dtype=np.float32))
 style = xp.asarray(style, dtype=xp.float32)
 style_b = xp.zeros((batchsize,) + style.shape, dtype=xp.float32)
 for i in range(batchsize):
@@ -102,9 +107,11 @@ for epoch in range(n_epoch):
         vgg.zerograds()
 
         indices = range(i * batchsize, (i+1) * batchsize)
-        x = xp.zeros((batchsize, 3, 256, 256), dtype=xp.float32)
+        x = xp.zeros((batchsize, 3, size, size), dtype=xp.float32)
         for j in range(batchsize):
-            x[j] = xp.asarray(Image.open(imagepaths[i*batchsize + j]).convert('RGB').resize((256,256)), dtype=np.float32).transpose(2, 0, 1)
+            img = Image.open(imagepaths[i*batchsize + j]).convert('RGB')
+            img = ImageOps.fit(img, (size, size), 2) if args.crop else img.resize((size,size), 2)
+            x[j] = xp.asarray(img, dtype=np.float32).transpose(2, 0, 1)
 
         xc = Variable(x.copy(), volatile=True)
         x = Variable(x)
