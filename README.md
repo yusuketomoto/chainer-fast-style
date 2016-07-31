@@ -2,10 +2,10 @@
 Fast artistic style transfer by using feed forward network.
 
 <img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/tubingen.jpg" height="200px">
-
 <img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/style_1.png" height="200px">
 <img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/output_1.jpg" height="200px">
 
+<img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/tubingen.jpg" height="200px">
 <img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/style_2.png" height="200px">
 <img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/output_2.jpg" height="200px">
 
@@ -13,6 +13,19 @@ Fast artistic style transfer by using feed forward network.
 - process time(CPU): 17.78sec (Core i7-5930K)
 - process time(GPU): 0.994sec (GPU TitanX)
 
+## Differences from original
+* default `--image_size` set to 512 (original uses 256)
+* ability to switch off dataset cropping with `--fullsize` option. Crops by default, preserving aspect ratio
+* cropping implementation uses [`ImageOps.fit`](http://pillow.readthedocs.io/en/3.1.x/reference/ImageOps.html#PIL.ImageOps.fit), which always scales and crops, whereas original uses custom solution, which upscales the image if it's smaller than `--image_size`, otherwise just crops without scaling
+* bicubic and Lanczos [resampling](http://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.resize) when scaling dataset and input style images accordingly provides sharper shrinking, whereas original uses nearest neighbour
+
+## Video Processing
+The repo includes a bash script to transform your videos. It depends on ffmpeg. [Compilation instructions](https://trac.ffmpeg.org/wiki/CompilationGuide)
+```
+./genvid.sh input_video output_video model start_time duration
+```
+The first three arguments are mandatory and should contain path to files.<br>
+The last two are optional and indicate starting position and duration in seconds.
 
 ## Requirement
 - [Chainer](https://github.com/pfnet/chainer)
