@@ -1,7 +1,7 @@
 import numpy as np
 import argparse
 from PIL import Image
-import time
+import time, os, glob
 
 import chainer
 from chainer import cuda, Variable, serializers
@@ -22,17 +22,21 @@ if args.gpu >= 0:
     model.to_gpu()
 xp = np if args.gpu < 0 else cuda.cupy
 
-start = time.time()
-image = xp.asarray(Image.open(args.input).convert('RGB'), dtype=xp.float32).transpose(2, 0, 1)
-image = image.reshape((1,) + image.shape)
-x = Variable(image)
+imagelist = glob.glob(args.input)
+multi = True if len(imagelist) > 1 else False
+for filename in imagelist:
+    start = time.time()
+    image = xp.asarray(Image.open(filename).convert('RGB'), dtype=xp.float32).transpose(2, 0, 1)
+    image = image.reshape((1,) + image.shape)
+    x = Variable(image)
 
-y = model(x)
-result = cuda.to_cpu(y.data)
+    y = None
+    y = model(x)
+    result = cuda.to_cpu(y.data)
 
-result = result.transpose(0, 2, 3, 1)
-result = result.reshape((result.shape[1:]))
-result = np.uint8(result)
-print time.time() - start, 'sec'
+    result = result.transpose(0, 2, 3, 1)
+    result = result.reshape((result.shape[1:]))
+    result = np.uint8(result)
+    print filename, time.time() - start, 'sec'
 
-Image.fromarray(result).save(args.out)
+    Image.fromarray(result).save('{}{}'.format(args.out, os.path.basename(filename) if multi else ''))

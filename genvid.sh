@@ -5,14 +5,15 @@ OUTPUT=$2
 MODEL=$3
 START=${4-0}
 DUR=${5-0}
-FILENAME="${1##*/}"
+DIR=frames
+FILENAME="${INPUT##*/}"
 FILENAME="${FILENAME%.*}"
 FPS=`ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of default=noprint_wrappers=1:nokey=1 $INPUT`
 
-mkdir -p frames
+mkdir -p $DIR
 echo "Extracting frames"
-ffmpeg -ss $START -t $DUR -i $INPUT frames/$FILENAME%d.png
+ffmpeg -ss $START -t $DUR -i $INPUT $DIR/$FILENAME%d.png
 echo "Finished extracting frames, transforming"
-for f in frames/$FILENAME*.png; do python generate.py $f -m $MODEL -o frames/trans_${f:7} -g 0; done
+python generate.py $DIR/$FILENAME'*.png' -m $MODEL -o $DIR/trans_ -g 0
 echo "Done processing, muxing back togeter"
-ffmpeg -framerate $FPS -i frames/trans_$FILENAME%d.png -c:v libx264 $OUTPUT
+ffmpeg -framerate $FPS -i $DIR/trans_$FILENAME%d.png -c:v libx264 $OUTPUT

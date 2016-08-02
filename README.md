@@ -14,10 +14,15 @@ Fast artistic style transfer by using feed forward network.
 - process time(GPU): 0.994sec (GPU TitanX)
 
 ## Differences from original
-* default `--image_size` set to 512 (original uses 256)
-* ability to switch off dataset cropping with `--fullsize` option. Crops by default, preserving aspect ratio
+#### Training
+* default `--image_size` set to 512 (original uses 256). It's slow, but time is the price you have to pay for quality
+* ability to switch off dataset cropping with `--fullsize` option. Crops by default to preserve aspect ratio
 * cropping implementation uses [`ImageOps.fit`](http://pillow.readthedocs.io/en/3.1.x/reference/ImageOps.html#PIL.ImageOps.fit), which always scales and crops, whereas original uses custom solution, which upscales the image if it's smaller than `--image_size`, otherwise just crops without scaling
-* bicubic and Lanczos [resampling](http://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.resize) when scaling dataset and input style images accordingly provides sharper shrinking, whereas original uses nearest neighbour
+* bicubic and Lanczos [resampling](http://pillow.readthedocs.io/en/3.1.x/reference/Image.html#PIL.Image.Image.resize) when scaling dataset and input style images respectively provides sharper shrinking, whereas original uses nearest neighbour
+
+#### Generating
+* Ability to specify multiple files for input to exclude model reloading every iteration. The format is standard Unix path expansion rules, like `file*` or `file?.png` Don't forget to quote, otherwise the shell will expand it first. Saves about 0.5 sec on each image.
+* Output specifies path prefix if multiple files are used for input, otherwise a direct filename
 
 ## Video Processing
 The repo includes a bash script to transform your videos. It depends on ffmpeg. [Compilation instructions](https://trac.ffmpeg.org/wiki/CompilationGuide)
