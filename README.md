@@ -22,7 +22,8 @@ Fast artistic style transfer by using feed forward network.
 
 #### Generating
 * Ability to specify multiple files for input to exclude model reloading every iteration. The format is standard Unix path expansion rules, like `file*` or `file?.png` Don't forget to quote, otherwise the shell will expand it first. Saves about 0.5 sec on each image.
-* Output specifies path prefix if multiple files are used for input, otherwise a direct filename
+* Output specifies path prefix if multiple files are used for input, otherwise an explicit filename
+* Option `-x` indicates content image scaling factor before transformation
 
 ## Video Processing
 The repo includes a bash script to transform your videos. It depends on ffmpeg. [Compilation instructions](https://trac.ffmpeg.org/wiki/CompilationGuide)

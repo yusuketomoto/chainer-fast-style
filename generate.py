@@ -12,6 +12,7 @@ parser.add_argument('input')
 parser.add_argument('--gpu', '-g', default=-1, type=int,
                     help='GPU ID (negative value indicates CPU)')
 parser.add_argument('--model', '-m', default='models/style.model', type=str)
+parser.add_argument('--scale', '-x', default=1, type=float)
 parser.add_argument('--out', '-o', default='out.jpg', type=str)
 args = parser.parse_args()
 
@@ -26,7 +27,9 @@ imagelist = glob.glob(args.input)
 multi = True if len(imagelist) > 1 else False
 for filename in imagelist:
     start = time.time()
-    image = xp.asarray(Image.open(filename).convert('RGB'), dtype=xp.float32).transpose(2, 0, 1)
+    image = Image.open(filename).convert('RGB')
+    w, h = (int(args.scale*i) for i in image.size)
+    image = xp.asarray(image.resize((w, h), 3), dtype=xp.float32).transpose(2, 0, 1)
     image = image.reshape((1,) + image.shape)
     x = Variable(image)
 
