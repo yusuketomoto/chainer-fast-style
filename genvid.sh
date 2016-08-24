@@ -16,8 +16,8 @@ fi
 
 mkdir -p $DIR
 echo "Extracting frames"
-ffmpeg -ss $START -t $DUR -i $INPUT $DIR/$FILENAME%d.png
+ffmpeg -ss $START -t $DUR -i $INPUT $DIR/$FILENAME\_%d.png
 echo "Finished extracting frames, transforming"
-python generate.py $DIR/$FILENAME'*.png' -m $MODEL -o $DIR/trans_ -g 0
+python generate.py $DIR/$FILENAME'_*.png' -m $MODEL -o $DIR/trans_ -g 0 -flow 0.02
 echo "Done processing, muxing back togeter"
-ffmpeg -framerate $FPS -i $DIR/trans_$FILENAME%d.png $CODEC $OUTPUT
+ffmpeg -framerate $FPS -i $DIR/trans_$FILENAME\_%d.png $CODEC $OUTPUT

@@ -34,6 +34,14 @@ The repo includes a bash script to transform your videos. It depends on ffmpeg. 
 The first three arguments are mandatory and should contain path to files.<br>
 The last two are optional and indicate starting position and duration in seconds.
 
+I integrated [Optical Flow](https://github.com/larspars/neural-style-video) implementation by [@larspars](https://github.com/larspars) to provide more consistent output for sequence of images by smoothing out the differences between frames. It requires `opencv-python`. Separate thanks to [@genekogan](https://github.com/genekogan) for providing a thorough [explanation](https://gist.github.com/genekogan/d61c8010d470e1dbe15d#generating-styled-images) of remarkably simple, yet efficient steps to put this together.
+
+To use it, append the `-flow` option followed by amount of alpha blending like so
+```
+python generate.py 'frames/image*.png' -m models/any.model -o dir/prefix_ -flow 0.02
+```
+I find values between 0.02 and 0.05 to work best. It calculates motion vector between previous and current source frames, applies the distortion to previously transformed frame, overlays it on top of current source frame with `-flow` opacity and finally transforms it. This helps the network transformation to reveal the same features in current frame as were discovered in the previous. It only affects sequence of images so if there's a single image in the list, you won't see any difference.
+
 ## Requirement
 - [Chainer](https://github.com/pfnet/chainer)
 ```
