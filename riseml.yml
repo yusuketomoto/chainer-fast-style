@@ -1,0 +1,11 @@
+description: Demo for chainer implementation of "Perceptual Losses for Real-Time Style Transfer and Super-Resolution".
+image:
+  - riseml/chainer:latest6
+service:
+  commands:
+    - mkdir -p /scratch/models/
+    - (wget -nc -O /scratch/models/seurat.model https://github.com/yusuketomoto/chainer-fast-neuralstyle/raw/master/models/seurat.model || true)
+    - (wget -nc -O /scratch/models/composition.model https://github.com/yusuketomoto/chainer-fast-neuralstyle/raw/master/models/composition.model || true)
+    - python demo.py --model /scratch/models/composition.model --gpu 0
+  input: image
+  output: image
