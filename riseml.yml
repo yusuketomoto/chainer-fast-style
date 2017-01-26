@@ -1,6 +1,6 @@
 description: Demo for chainer implementation of "Perceptual Losses for Real-Time Style Transfer and Super-Resolution".
 image:
-  - riseml/chainer:latest6
+  - riseml/chainer:latest
 service:
   commands:
     - mkdir -p /scratch/models/
