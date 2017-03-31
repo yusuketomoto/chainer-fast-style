@@ -1,6 +1,8 @@
 # Chainer implementation of "Perceptual Losses for Real-Time Style Transfer and Super-Resolution"
 Fast artistic style transfer by using feed forward network.
 
+<a href="https://riseml.com/yusuketomoto/chainer-fast-neuralstyle/realtime-demo"><img align="right" src="http://cdn.riseml.com/btn.png"></a>
+
 **checkout [resize-conv](https://github.com/yusuketomoto/chainer-fast-neuralstyle/tree/resize-conv) branch which provides better result.**
 
 <img src="https://raw.githubusercontent.com/yusuketomoto/chainer-fast-neuralstyle/master/sample_images/tubingen.jpg" height="200px">
