@@ -9,9 +9,9 @@ deploy:
   run:
     - python demo.py --model /scratch/models/composition.model --gpu 0
   input: 
-   image: image/jpeg
+    image: image/jpeg
   output: 
-   image: image/jpeg
+    image: image/jpeg
   demo:
-   title: Real-Time Style Transfer
-   description: Demo for chainer implementation of "Perceptual Losses for Real-Time Style Transfer and Super-Resolution".
+    title: Real-Time Style Transfer
+    description: Demo for chainer implementation of "Perceptual Losses for Real-Time Style Transfer and Super-Resolution".
