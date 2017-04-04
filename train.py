@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import numpy as np
 import os, re
 import argparse
+import random
 from PIL import Image
 
 from chainer import cuda, Variable, optimizers, serializers
@@ -53,6 +54,12 @@ parser.add_argument('--lambda_tv', default=1e-6, type=float,
                     help='weight of total variation regularization according to the paper to be set between 10e-4 and 10e-6.')
 parser.add_argument('--lambda_feat', default=1.0, type=float)
 parser.add_argument('--lambda_style', default=5.0, type=float)
+parser.add_argument('--lambda_noise', default=1000.0, type=float,
+                    help='Training weight of the popping induced by noise')
+parser.add_argument('--noise', default=10, type=int,
+                    help='range of noise for popping reduction')
+parser.add_argument('--noisecount', default=0, type=int,
+                    help='number of pixels to modify with noise')
 parser.add_argument('--epoch', '-e', default=2, type=int)
 parser.add_argument('--lr', '-l', default=1e-3, type=float)
 parser.add_argument('--checkpoint', '-c', default=0, type=int)
@@ -66,6 +73,9 @@ n_epoch = args.epoch
 lambda_tv = args.lambda_tv
 lambda_f = args.lambda_feat
 lambda_s = args.lambda_style
+lambda_noise = args.lambda_noise
+noise_range = args.noise
+noise_count = args.noisecount
 style_prefix, _ = os.path.splitext(os.path.basename(args.style_image))
 output = style_prefix if args.output == None else args.output
 fs = os.listdir(args.dataset)
@@ -108,6 +118,19 @@ gram_s = [gram_matrix(y) for y in feature_s]
 
 for epoch in range(n_epoch):
     print('epoch', epoch)
+
+    if noise_count:
+        noiseimg = xp.zeros((3, image_size, image_size), dtype=xp.float32)
+
+        # prepare a noise image
+        for ii in range(noise_count):
+            xx = random.randrange(image_size)
+            yy = random.randrange(image_size)
+
+            noiseimg[0][yy][xx] += random.randrange(-noise_range, noise_range)
+            noiseimg[1][yy][xx] += random.randrange(-noise_range, noise_range)
+            noiseimg[2][yy][xx] += random.randrange(-noise_range, noise_range)
+
     for i in range(n_iter):
         model.zerograds()
         vgg.zerograds()
@@ -118,6 +141,16 @@ for epoch in range(n_epoch):
             x[j] = load_image(imagepaths[i*batchsize + j], image_size)
 
         xc = Variable(x.copy(), volatile=True)
+
+        if noise_count:
+            # add the noise image to the source image
+            noisy_x = x.copy()
+            noisy_x = noisy_x + noiseimg
+
+            noisy_x = Variable(noisy_x)
+            noisy_y = model(noisy_x)
+            noisy_y -= 120
+
         x = Variable(x)
 
         y = model(x)
@@ -135,9 +168,24 @@ for epoch in range(n_epoch):
             L_style += lambda_s * F.mean_squared_error(gram_matrix(f_hat), Variable(g_s.data))
 
         L_tv = lambda_tv * total_variation(y)
-        L = L_feat + L_style + L_tv
 
-        print('(epoch {}) batch {}/{}... training loss is...{}'.format(epoch, i, n_iter, L.data))
+        # the 'popping' noise is the difference in resulting stylizations
+        # from two images that are very similar. Minimizing it results
+        # in a much more stable stylization that can be applied to video.
+        # Small changes in the input result in small changes in the output.
+        if noise_count:
+            L_pop = lambda_noise * F.mean_squared_error(y, noisy_y)
+            L = L_feat + L_style + L_tv + L_pop
+            print('Epoch {},{}/{}. Total loss: {}. Loss distribution: feat {}, style {}, tv {}, pop {}'
+                         .format(epoch, i, n_iter, L.data,
+                                 L_feat.data/L.data, L_style.data/L.data,
+                                 L_tv.data/L.data, L_pop.data/L.data))
+        else:
+            L = L_feat + L_style + L_tv
+            print('Epoch {},{}/{}. Total loss: {}. Loss distribution: feat {}, style {}, tv {}'
+                         .format(epoch, i, n_iter, L.data,
+                                 L_feat.data/L.data, L_style.data/L.data,
+                                 L_tv.data/L.data))
 
         L.backward()
         O.update()
